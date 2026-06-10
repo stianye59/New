@@ -14,6 +14,7 @@ import { auth, signInWithPopup, signOut, googleProvider, db, handleFirestoreErro
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs, writeBatch } from 'firebase/firestore';
 import { safeStorage } from './utils/storage';
+import { Analytics } from '@vercel/analytics/react';
 
 // Beautiful seed data to show features on first load
 const SEED_RECORDS: StudyRecord[] = [
@@ -831,6 +832,7 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
+      <Analytics />
     </div>
   );
 }
