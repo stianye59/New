@@ -1,0 +1,53 @@
+{
+  "entities": {
+    "StudyRecord": {
+      "title": "StudyRecord",
+      "description": "A single study record of a solved problem or workbook chapter.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique record ID" },
+        "userId": { "type": "string", "description": "The firebase auth uid of the user who owns this record" },
+        "genre": { "type": "string", "description": "Subject / Genre name of the problem" },
+        "workbookName": { "type": "string", "description": "Workbook or textbook name" },
+        "problemNumber": { "type": "string", "description": "Problem identifier or chapter name" },
+        "learningDate": { "type": "string", "format": "date", "description": "Session learning date in YYYY-MM-DD format" },
+        "timeTaken": { "type": "integer", "description": "Time taken to solve the problem in seconds" },
+        "targetTime": { "type": "integer", "description": "Target time in minutes. Optional, up to 180." },
+        "understandingRank": { "type": "string", "enum": ["S", "A", "B", "C", "D"], "description": "Level of understanding" },
+        "memo": { "type": "string", "description": "Optional learning notes" },
+        "createdAt": { "type": "integer", "description": "Unix timestamp of creation" }
+      },
+      "required": ["id", "userId", "genre", "workbookName", "problemNumber", "learningDate", "timeTaken", "understandingRank", "createdAt"]
+    },
+    "UserPreference": {
+      "title": "UserPreference",
+      "description": "User custom genre list and workbook settings lists to persist lists across devices.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The owner UID" },
+        "customGenres": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of custom genres"
+        },
+        "customWorkbooks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of custom workbook names"
+        },
+        "updatedAt": { "type": "integer", "description": "Last updated unix timestamp" }
+      },
+      "required": ["userId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/records/{recordId}": {
+      "schema": "StudyRecord",
+      "description": "Primary study tracker records for an individual user."
+    },
+    "/users/{userId}/preferences/main": {
+      "schema": "UserPreference",
+      "description": "Main custom dropdown preference lists for the user."
+    }
+  }
+}

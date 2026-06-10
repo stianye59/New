@@ -1,0 +1,8 @@
+{
+  "name": "学習進捗管理 Remix",
+  "description": "タイマーと理解度評価で学習の進捗を記録・分析する進捗管理アプリ",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Global Helper Primitive Definition
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Validation Blueprint for StudyRecord
+    function isValidStudyRecord(data) {
+      return data.id is string && data.id.size() <= 128 && data.id.size() > 0
+        && data.userId is string && data.userId == request.auth.uid && data.userId.size() <= 128
+        && data.genre is string && data.genre.size() <= 200 && data.genre.size() > 0
+        && data.workbookName is string && data.workbookName.size() <= 200 && data.workbookName.size() > 0
+        && data.problemNumber is string && data.problemNumber.size() <= 200 && data.problemNumber.size() > 0
+        && data.learningDate is string && data.learningDate.size() <= 24 && data.learningDate.size() > 0
+        && data.timeTaken is int && data.timeTaken >= 0
+        && (!('targetTime' in data) || (data.targetTime is int && data.targetTime >= 0))
+        && data.understandingRank is string && (data.understandingRank == 'S' || data.understandingRank == 'A' || data.understandingRank == 'B' || data.understandingRank == 'C' || data.understandingRank == 'D')
+        && (!('memo' in data) || (data.memo is string && data.memo.size() <= 5000))
+        && data.createdAt is int;
+    }
+
+    // Validation Blueprint for UserPreference
+    function isValidUserPreference(data) {
+      return data.userId is string && data.userId == request.auth.uid && data.userId.size() <= 128
+        && (!('customGenres' in data) || (data.customGenres is list && data.customGenres.size() <= 100 && (data.customGenres.size() == 0 || (data.customGenres[0] is string && data.customGenres[0].size() <= 200))))
+        && (!('customWorkbooks' in data) || (data.customWorkbooks is list && data.customWorkbooks.size() <= 100 && (data.customWorkbooks.size() == 0 || (data.customWorkbooks[0] is string && data.customWorkbooks[0].size() <= 200))))
+        && (!('updatedAt' in data) || data.updatedAt is int);
+    }
+
+    // Match rules for primary and nested collections
+    match /users/{userId} {
+      
+      match /records/{recordId} {
+        allow read, delete: if isOwner(userId);
+        
+        allow create: if isOwner(userId)
+          && isValidId(recordId)
+          && isValidStudyRecord(incoming())
+          && incoming().createdAt <= request.time.toMillis() + 120000
+          && incoming().createdAt >= request.time.toMillis() - 120000;
+          
+        allow update: if isOwner(userId)
+          && isValidId(recordId)
+          && isValidStudyRecord(incoming())
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt;
+      }
+
+      match /preferences/{prefId} {
+        allow read: if isOwner(userId) && isValidId(prefId);
+        
+        allow create: if isOwner(userId)
+          && isValidId(prefId)
+          && isValidUserPreference(incoming())
+          && incoming().updatedAt <= request.time.toMillis() + 120000
+          && incoming().updatedAt >= request.time.toMillis() - 120000;
+          
+        allow update: if isOwner(userId)
+          && isValidId(prefId)
+          && isValidUserPreference(incoming())
+          && incoming().userId == existing().userId;
+      }
+    }
+  }
+}
