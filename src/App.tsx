@@ -15,6 +15,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { collection, doc, setDoc, deleteDoc, onSnapshot, getDoc, getDocs, writeBatch } from 'firebase/firestore';
 import { safeStorage } from './utils/storage';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 // Beautiful seed data to show features on first load
 const SEED_RECORDS: StudyRecord[] = [
@@ -833,6 +834,7 @@ export default function App() {
         )}
       </AnimatePresence>
       <Analytics />
+      <SpeedInsights />
     </div>
   );
 }
